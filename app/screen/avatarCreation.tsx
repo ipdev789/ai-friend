@@ -15,28 +15,37 @@ import { RadioButton } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import Slider from '@react-native-community/slider';
+import { Picker } from '@react-native-picker/picker';
 
-const avatarOptions = [
-  { id: 'avatar1', src: require('../../assets/avatar1.png') },
-  { id: 'avatar2', src: require('../../assets/avatar2.jpg') },
-  { id: 'avatar3', src: require('../../assets/avatar3.png') },
-  { id: 'avatar4', src: require('../../assets/avatar4.png') },
-  { id: 'avatar5', src: require('../../assets/avatar5.jpg') },
+const maleAvatars = [
+  { id: 'male1', src: require('../../assets/male1.jpg') },
+  { id: 'male2', src: require('../../assets/male2.png') },
+  { id: 'male3', src: require('../../assets/male3.png') },
+  { id: 'male4', src: require('../../assets/male4.png') },
+  { id: 'male5', src: require('../../assets/male5.png') },
+];
+
+const femaleAvatars = [
+  { id: 'female1', src: require('../../assets/female1.png') },
+  { id: 'female2', src: require('../../assets/female2.png') },
+  { id: 'female3', src: require('../../assets/female3.jpg') },
+  { id: 'female4', src: require('../../assets/female4.jpg') },
 ];
 
 const AvatarCustomization = () => {
   const router = useRouter();
   const [age, setAge] = useState(25);
   const [gender, setGender] = useState('female');
-  // const [voice, setVoice] = useState('female');
-  const [selectedAvatar, setSelectedAvatar] = useState(avatarOptions[0].id);
+  const [selectedAvatar, setSelectedAvatar] = useState(femaleAvatars[0].id);
   const [avatarName, setAvatarName] = useState('');
   const [showOptions, setShowOptions] = useState(false);
   const [customAvatarsCount, setCustomAvatarsCount] = useState(0);
-  const [avatarOptionsState, setAvatarOptions] = useState(avatarOptions);
+  const [personality, setPersonality] = useState('Friendly'); // New state for personality
+
+  const getAvatarOptions = () => (gender === 'male' ? maleAvatars : femaleAvatars);
 
   const handleAvatarUpload = async () => {
-    if (customAvatarsCount >= 5) {
+    if (customAvatarsCount >= 8) {
       Alert.alert('Limit Reached', 'You can only upload up to 5 avatars.');
       return;
     }
@@ -50,11 +59,10 @@ const AvatarCustomization = () => {
 
     if (!result.canceled && result.assets && result.assets.length > 0) {
       const newAvatar = {
-        id: `avatar${avatarOptionsState.length + 1}`,
+        id: `avatar${getAvatarOptions().length + 1}`,
         src: { uri: result.assets[0].uri },
       };
 
-      setAvatarOptions([...avatarOptionsState, newAvatar]);
       setCustomAvatarsCount(customAvatarsCount + 1);
       setSelectedAvatar(newAvatar.id);
     }
@@ -68,30 +76,23 @@ const AvatarCustomization = () => {
       Alert.alert('Error', 'Please select a valid age!');
     } else if (!gender) {
       Alert.alert('Error', 'Please select a gender!');
-    // } else if (!voice) {
-    //   Alert.alert('Error', 'Please select a voice!');
     } else {
       Alert.alert('Success', 'Proceeding to Dashboard!');
 
-      // Navigate to the Dashboard page using router.push
       router.push({
         pathname: '/screen/Dashboard',
         params: {
-          selectedAvatar: avatarOptionsState.find(a => a.id === selectedAvatar)?.src.uri,
+          selectedAvatar: getAvatarOptions().find(a => a.id === selectedAvatar)?.src.uri,
           avatarName,
           age,
           gender,
-          // voice,
+          personality, // Passing personality as part of the params
         },
       });
-      
-      
     }
-    console.log('Save changes:', { selectedAvatar, avatarName, age, gender });
-    // console.log('Save changes:', { selectedAvatar, avatarName, age, gender, voice });
   };
 
-  const currentAvatarSrc = avatarOptionsState.find(a => a.id === selectedAvatar)?.src;
+  const currentAvatarSrc = getAvatarOptions().find(a => a.id === selectedAvatar)?.src;
 
   return (
     <ScrollView style={styles.container}>
@@ -112,7 +113,7 @@ const AvatarCustomization = () => {
         </View>
 
         <View style={styles.avatarOptions}>
-          {avatarOptionsState.map(avatar => (
+          {getAvatarOptions().map(avatar => (
             <TouchableOpacity
               key={avatar.id}
               onPress={() => setSelectedAvatar(avatar.id)}
@@ -124,10 +125,6 @@ const AvatarCustomization = () => {
               <Image source={avatar.src} style={styles.optionImage} />
             </TouchableOpacity>
           ))}
-          <TouchableOpacity style={styles.customButton} onPress={() => setShowOptions(true)}>
-            <Ionicons name="image" size={24} color="#7C3AED" />
-            <Text style={styles.customText}>Custom</Text>
-          </TouchableOpacity>
         </View>
 
         <Text style={styles.label}>Age: {age} years</Text>
@@ -159,44 +156,24 @@ const AvatarCustomization = () => {
             <Text style={styles.radioLabel}>Male</Text>
           </View>
         </View>
-{/* 
-        <Text style={styles.label}>Voice Type</Text>
-        <View style={styles.radioGroup}>
-          <View style={styles.radioButton}>
-            <RadioButton
-              value="female"
-              status={voice === 'female' ? 'checked' : 'unchecked'}
-              onPress={() => setVoice('female')}
-            />
-            <Text style={styles.radioLabel}>Female Voice</Text>
-          </View>
-          <View style={styles.radioButton}>
-            <RadioButton
-              value="male"
-              status={voice === 'male' ? 'checked' : 'unchecked'}
-              onPress={() => setVoice('male')}
-            />
-            <Text style={styles.radioLabel}>Male Voice</Text>
-          </View>
-        </View> */}
+
+        {/* Personality Dropdown */}
+        <Text style={styles.label}>Personality</Text>
+        <Picker
+          selectedValue={personality}
+          style={styles.picker}
+          onValueChange={(itemValue) => setPersonality(itemValue)}
+        >
+          <Picker.Item label="Friendly" value="Friendly" />
+          <Picker.Item label="Serious" value="Serious" />
+          <Picker.Item label="Fun" value="Fun" />
+          <Picker.Item label="Motivational" value="Motivational" />
+        </Picker>
 
         <TouchableOpacity style={styles.saveButton} onPress={handleSaveChanges}>
           <Text style={styles.saveText}>Save Changes</Text>
         </TouchableOpacity>
       </View>
-
-      <Modal visible={showOptions} transparent animationType="fade">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <TouchableOpacity style={styles.modalOption} onPress={handleAvatarUpload}>
-              <Text style={styles.modalOptionText}>Upload Photo</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.modalOption} onPress={() => setShowOptions(false)}>
-              <Text style={styles.modalOptionText}>Cancel</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
     </ScrollView>
   );
 };
@@ -262,20 +239,6 @@ const styles = StyleSheet.create({
     height: 50,
     borderRadius: 25,
   },
-  customButton: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: 50,
-    height: 50,
-    backgroundColor: '#fff',
-    borderColor: '#540681',
-    borderRadius: 25,
-    marginLeft: 10,
-  },
-  customText: {
-    fontSize: 10,
-    color: '#540681',
-  },
   label: {
     fontSize: 16,
     fontWeight: 'bold',
@@ -299,6 +262,11 @@ const styles = StyleSheet.create({
     color: '#540681',
     marginLeft: 8,
   },
+  picker: {
+    height: 50,
+    width: '100%',
+    marginBottom: 20,
+  },
   saveButton: {
     backgroundColor: '#540681',
     padding: 15,
@@ -309,27 +277,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     textAlign: 'center',
     fontWeight: 'bold',
-  },
-  modalOverlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  modalContent: {
-    backgroundColor: 'white',
-    padding: 20,
-    borderRadius: 10,
-    width: '80%',
-  },
-  modalOption: {
-    padding: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
-  },
-  modalOptionText: {
-    fontSize: 16,
-    color: '#7C3AED',
   },
 });
 

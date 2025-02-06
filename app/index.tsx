@@ -15,9 +15,11 @@ import { useRouter } from "expo-router";
 
 const SignInScreen: React.FC = () => {
   const [isEmail, setIsEmail] = useState(true);
+  const [isEmailValid, setIsEmailValid] = useState(true);
   const slideAnim = useRef(new Animated.Value(0)).current;
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [isPhoneValid, setIsPhoneValid] = useState(true);
   const [password, setPassword] = useState("");
   const router = useRouter();
 
@@ -41,7 +43,23 @@ const SignInScreen: React.FC = () => {
       router.push("./screen/avatarCreation");
     }
   };
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+  const handleEmailChange = (email: string) => {
+    setEmail(email);
+    setIsEmailValid(validateEmail(email));
+  };
+  const validatePhone = (phone: string) => {
+    const phoneRegex = /^\d{10}$/;
+    return phoneRegex.test(phone);
+  };
 
+  const handlePhoneChange = (phone: string) => {
+    setPhone(phone);
+    setIsPhoneValid(validatePhone(phone));
+  };
   const handleForgotPassword = () => {
     router.push("./screen/forgotPassword");
   };
@@ -89,15 +107,18 @@ const SignInScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
         {!isEmail && (
-          <TextInput
-            placeholder="Phone number"
-            keyboardType="phone-pad"
-            style={styles.input}
-            value={phone}
-            onChangeText={setPhone}
-          />
+                   <View>
+                          <TextInput
+                            placeholder="Phone Number"
+                            keyboardType="phone-pad"
+                            style={[styles.input, !isPhoneValid && styles.inputError]}
+                            value={phone}
+                            onChangeText={handlePhoneChange}
+                            />
+                            {!isPhoneValid && <Text style={styles.errorText}>Please enter a valid 10-digit phone number.</Text>}
+                    </View>
         )}
-        {isEmail && (
+        {/* {isEmail && (
           <TextInput
             placeholder="Email"
             keyboardType="email-address"
@@ -105,7 +126,19 @@ const SignInScreen: React.FC = () => {
             value={email}
             onChangeText={setEmail}
           />
-        )}
+        )} */}
+         {isEmail && (
+        <View>
+          <TextInput
+            placeholder="Email"
+            keyboardType="email-address"
+            style={[styles.input, !isEmailValid && styles.inputError]}
+            value={email}
+            onChangeText={handleEmailChange}
+          />
+          {!isEmailValid && <Text style={styles.errorText}>Please enter a valid email address.</Text>}
+        </View>
+      )}
         <TextInput
           placeholder="Password"
           secureTextEntry
@@ -221,6 +254,13 @@ const styles = StyleSheet.create({
     padding: 12,
     marginBottom: 12,
     backgroundColor: "#f9f9f9",
+  }, inputError: {
+    borderColor: 'red',
+    borderWidth: 1,
+  },
+  errorText: {
+    color: 'red',
+    fontSize: 12,
   },
   button: {
     backgroundColor: "#4B0082",
