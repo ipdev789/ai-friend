@@ -7,13 +7,12 @@ import {
   Image,
   StyleSheet,
   ScrollView,
-  Modal,
   Alert,
+  PanResponder,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { RadioButton } from 'react-native-paper';
 import { useRouter } from 'expo-router';
-import * as ImagePicker from 'expo-image-picker';
 import Slider from '@react-native-community/slider';
 import { Picker } from '@react-native-picker/picker';
 
@@ -38,36 +37,9 @@ const AvatarCustomization = () => {
   const [gender, setGender] = useState('female');
   const [selectedAvatar, setSelectedAvatar] = useState(femaleAvatars[0].id);
   const [avatarName, setAvatarName] = useState('');
-  const [showOptions, setShowOptions] = useState(false);
-  const [customAvatarsCount, setCustomAvatarsCount] = useState(0);
   const [personality, setPersonality] = useState('Friendly'); // New state for personality
 
   const getAvatarOptions = () => (gender === 'male' ? maleAvatars : femaleAvatars);
-
-  const handleAvatarUpload = async () => {
-    if (customAvatarsCount >= 8) {
-      Alert.alert('Limit Reached', 'You can only upload up to 5 avatars.');
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 1,
-    });
-
-    if (!result.canceled && result.assets && result.assets.length > 0) {
-      const newAvatar = {
-        id: `avatar${getAvatarOptions().length + 1}`,
-        src: { uri: result.assets[0].uri },
-      };
-
-      setCustomAvatarsCount(customAvatarsCount + 1);
-      setSelectedAvatar(newAvatar.id);
-    }
-    setShowOptions(false);
-  };
 
   const handleSaveChanges = () => {
     if (!avatarName.trim()) {
@@ -94,14 +66,50 @@ const AvatarCustomization = () => {
 
   const currentAvatarSrc = getAvatarOptions().find(a => a.id === selectedAvatar)?.src;
 
+  let lastTap: number | null = null;
+  const handleAvatarPress = () => {
+    const now = Date.now();
+    if (lastTap && (now - lastTap) < 300) {
+      const currentIndex = getAvatarOptions().findIndex(a => a.id === selectedAvatar);
+      const nextIndex = (currentIndex + 1) % getAvatarOptions().length;
+      setSelectedAvatar(getAvatarOptions()[nextIndex].id);
+    } else {
+      lastTap = now;
+    }
+  };
+
+  const panResponder = PanResponder.create({
+    onStartShouldSetPanResponder: () => true,
+    onPanResponderRelease: (evt, gestureState) => {
+      if (gestureState.dx > 50) {
+        // Swiped right
+        const currentIndex = getAvatarOptions().findIndex(a => a.id === selectedAvatar);
+        const nextIndex = (currentIndex + 1) % getAvatarOptions().length;
+        setSelectedAvatar(getAvatarOptions()[nextIndex].id);
+      } else if (gestureState.dx < -50) {
+        // Swiped left
+        const currentIndex = getAvatarOptions().findIndex(a => a.id === selectedAvatar);
+        const prevIndex = (currentIndex - 1 + getAvatarOptions().length) % getAvatarOptions().length;
+        setSelectedAvatar(getAvatarOptions()[prevIndex].id);
+      }
+    },
+  });
+
+  const handleGenderChange = (newGender: string) => {
+    setGender(newGender);
+    setSelectedAvatar(newGender === 'male' ? maleAvatars[0].id : femaleAvatars[0].id);
+  };
+
   return (
     <ScrollView style={styles.container}>
       <View style={styles.content}>
         <Text style={styles.title}>Customize Your AI Avatar</Text>
 
         <View style={styles.avatarSection}>
-          <View style={styles.avatarContainer}>
-            <Image source={currentAvatarSrc} style={styles.avatarImage} />
+          <View style={styles.avatarContainer} {...panResponder.panHandlers}>
+            <TouchableOpacity onPress={handleAvatarPress}>
+              <Image source={currentAvatarSrc} style={styles.avatarImage} />
+            </TouchableOpacity>
           </View>
           <TextInput
             style={styles.input}
@@ -112,27 +120,12 @@ const AvatarCustomization = () => {
           />
         </View>
 
-        <View style={styles.avatarOptions}>
-          {getAvatarOptions().map(avatar => (
-            <TouchableOpacity
-              key={avatar.id}
-              onPress={() => setSelectedAvatar(avatar.id)}
-              style={[
-                styles.avatarOption,
-                selectedAvatar === avatar.id && styles.selectedOption,
-              ]}
-            >
-              <Image source={avatar.src} style={styles.optionImage} />
-            </TouchableOpacity>
-          ))}
-        </View>
-
         <Text style={styles.label}>Age: {age} years</Text>
         <Slider
           value={age}
           onValueChange={setAge}
           minimumValue={18}
-          maximumValue={100}
+          maximumValue={60}
           step={1}
           style={styles.slider}
         />
@@ -143,7 +136,7 @@ const AvatarCustomization = () => {
             <RadioButton
               value="female"
               status={gender === 'female' ? 'checked' : 'unchecked'}
-              onPress={() => setGender('female')}
+              onPress={() => handleGenderChange('female')}
             />
             <Text style={styles.radioLabel}>Female</Text>
           </View>
@@ -151,7 +144,7 @@ const AvatarCustomization = () => {
             <RadioButton
               value="male"
               status={gender === 'male' ? 'checked' : 'unchecked'}
-              onPress={() => setGender('male')}
+              onPress={() => handleGenderChange('male')}
             />
             <Text style={styles.radioLabel}>Male</Text>
           </View>
@@ -220,24 +213,6 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 5,
     backgroundColor: '#fff',
-  },
-  avatarOptions: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginVertical: 20,
-  },
-  avatarOption: {
-    margin: 5,
-    borderWidth: 2,
-    borderColor: 'transparent',
-  },
-  selectedOption: {
-    borderColor: '#540681',
-  },
-  optionImage: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
   },
   label: {
     fontSize: 16,

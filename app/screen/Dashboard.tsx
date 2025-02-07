@@ -13,7 +13,7 @@ interface Message {
 
 const Dashboard = ({ route }: { route: any }) => {
   const router = useRouter();  // Using useRouter from expo-router
-  const { selectedAvatar, avatarName, age, gender, voice } = route?.params || {};
+  const { selectedAvatar, avatarName, age, gender, personality } = route?.params || {};
   const [messages, setMessages] = useState<Message[]>([]);  // Use the Message type for state
   const [input, setInput] = useState('');
   const [isVoiceMode, setIsVoiceMode] = useState(true);
@@ -67,11 +67,11 @@ const Dashboard = ({ route }: { route: any }) => {
             <Avatar
               size="large"
               rounded
-              source={selectedAvatar ? { uri: selectedAvatar } : require('../screen/avatarCreation')}
+              source={selectedAvatar ? { uri: selectedAvatar } : require('E:\\InventPrime\\ReactNative\\AvatarApp\\assets\\male1.jpg')}
               overlayContainerStyle={styles.avatar}
             />
             <Text style={styles.aiText}>{avatarName || 'Your AI Companion'}</Text>
-            <Text style={styles.aiDescription}>{`I am a ${age}-year-old ${gender} with a ${voice} voice.`}</Text>
+            <Text style={styles.aiDescription}>{`I am a ${age}-year-old ${gender} with a ${personality} personality.`}</Text>
             <TouchableOpacity onPress={toggleChatMode} style={styles.button}>
               <Text style={styles.buttonText}>
                 {isVoiceMode ? 'Switch to Text Chat' : 'Switch to Voice Chat'}
