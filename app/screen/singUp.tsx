@@ -4,7 +4,6 @@ import { useRouter } from "expo-router";
 import { Ionicons } from '@expo/vector-icons'; // Make sure to install @expo/vector-icons
 
 const SignUpScreen: React.FC = () => {
-  const [isEmail, setIsEmail] = useState(true);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -75,13 +74,13 @@ const SignUpScreen: React.FC = () => {
   };
 
   const handleCreateAccount = () => {
-    if (isEmail && (!email || !password || !cpassword || !username)) {
-      Alert.alert("Error", "Please fill all the fields.");
-    } else if (!isEmail && (!phone || !password || !cpassword || !username)) {
+    if (!email || !phone || !password || !cpassword || !username) {
       Alert.alert("Error", "Please fill all the fields.");
     } else if (password !== cpassword) {
       Alert.alert("Error", "Passwords do not match.");
-    } else if (!isEmail && !isPhoneValid) {
+    } else if (!isEmailValid) {
+      Alert.alert("Error", "Please enter a valid email address.");
+    } else if (!isPhoneValid) {
       Alert.alert("Error", "Please enter a valid 10-digit phone number.");
     } else {
       const randomOtp = Math.floor(1000 + Math.random() * 9000).toString();
@@ -89,7 +88,6 @@ const SignUpScreen: React.FC = () => {
       setShowOtpInput(true);
       setCountdown(60);
       setCanResendOtp(false);
-      // Remove the alert that shows the OTP for testing
       Alert.alert("OTP Sent", `Your OTP is: ${randomOtp}`); // For testing
       Alert.alert("OTP Sent", "An OTP has been sent to your email/phone.");
     }
@@ -117,6 +115,20 @@ const SignUpScreen: React.FC = () => {
     router.push('/'); // Redirect to the index page
   };
 
+  const isFormValid = () => {
+    return (
+      username &&
+      fullName &&
+      password &&
+      cpassword &&
+      isEmailValid &&
+      email &&
+      isPhoneValid &&
+      phone.length === 10 &&
+      password === cpassword
+    );
+  };
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
       <View style={styles.header}>
@@ -128,30 +140,26 @@ const SignUpScreen: React.FC = () => {
           <>
             <TextInput placeholder="Username" style={styles.input} value={username} onChangeText={setUsername} />
             <TextInput placeholder="Full Name" style={styles.input} value={fullName} onChangeText={setFullName} />
-            {isEmail && (
-              <View>
-                <TextInput
-                  placeholder="Email"
-                  keyboardType="email-address"
-                  style={[styles.input, !isEmailValid && styles.inputError]}
-                  value={email}
-                  onChangeText={handleEmailChange}
-                />
-                {!isEmailValid && <Text style={styles.errorText}>Please enter a valid email address.</Text>}
-              </View>
-            )}
-            {!isEmail && (
-              <View>
-                <TextInput
-                  placeholder="Phone Number"
-                  keyboardType="phone-pad"
-                  style={[styles.input, !isPhoneValid && styles.inputError]}
-                  value={phone}
-                  onChangeText={handlePhoneChange}
-                />
-                {!isPhoneValid && <Text style={styles.errorText}>Please enter a valid 10-digit phone number.</Text>}
-              </View>
-            )}
+            <View>
+              <TextInput
+                placeholder="Email"
+                keyboardType="email-address"
+                style={[styles.input, !isEmailValid && styles.inputError]}
+                value={email}
+                onChangeText={handleEmailChange}
+              />
+              {!isEmailValid && <Text style={styles.errorText}>Please enter a valid email address.</Text>}
+            </View>
+            <View>
+              <TextInput
+                placeholder="Phone Number"
+                keyboardType="phone-pad"
+                style={[styles.input, !isPhoneValid && styles.inputError]}
+                value={phone}
+                onChangeText={handlePhoneChange}
+              />
+              {!isPhoneValid && <Text style={styles.errorText}>Please enter a valid 10-digit phone number.</Text>}
+            </View>
             <View>
               <View style={styles.inputContainer}>
                 <TextInput
@@ -183,7 +191,7 @@ const SignUpScreen: React.FC = () => {
                 </TouchableOpacity>
               </View>
             </View>
-            <TouchableOpacity style={styles.button} onPress={handleCreateAccount}>
+            <TouchableOpacity style={[styles.button, !isFormValid() && styles.buttonDisabled]} onPress={handleCreateAccount} disabled={!isFormValid()}>
               <Text style={styles.buttonText}>Create Account</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={handleSignInRedirect}>
@@ -227,6 +235,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   button: { backgroundColor: "#4B0082", padding: 16, borderRadius: 8, alignItems: "center", marginTop: 8 },
+  buttonDisabled: { backgroundColor: "#999" },
   buttonText: { color: "#fff", fontWeight: "bold" },
   otpText: { fontSize: 16, textAlign: "center", marginBottom: 10 },
   inputContainer: {

@@ -38,19 +38,26 @@ const SignInScreen: React.FC = () => {
       Alert.alert("Error", "Please enter your email and password.");
     } else if (!isEmail && (!phone || !password)) {
       Alert.alert("Error", "Please enter your phone number and password.");
+    } else if (isEmail && !isEmailValid) {
+      Alert.alert("Error", "Please enter a valid email address.");
+    } else if (!isEmail && !isPhoneValid) {
+      Alert.alert("Error", "Please enter a valid 10-digit phone number.");
     } else {
       Alert.alert("Success", "Signed in successfully!");
       router.push("./screen/avatarCreation");
     }
   };
+
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
+
   const handleEmailChange = (email: string) => {
     setEmail(email);
     setIsEmailValid(validateEmail(email));
   };
+
   const validatePhone = (phone: string) => {
     const phoneRegex = /^\d{10}$/;
     return phoneRegex.test(phone);
@@ -60,6 +67,7 @@ const SignInScreen: React.FC = () => {
     setPhone(phone);
     setIsPhoneValid(validatePhone(phone));
   };
+
   const handleForgotPassword = () => {
     router.push("./screen/forgotPassword");
   };
@@ -67,6 +75,7 @@ const SignInScreen: React.FC = () => {
   const handleSignUpRedirect = () => {
     router.push("./screen/singUp");
   };
+
   const handleGoogleLogin = () => {
     Alert.alert("Google Login", "Redirecting to Google login...");
   };
@@ -107,38 +116,29 @@ const SignInScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
         {!isEmail && (
-                   <View>
-                          <TextInput
-                            placeholder="Phone Number"
-                            keyboardType="phone-pad"
-                            style={[styles.input, !isPhoneValid && styles.inputError]}
-                            value={phone}
-                            onChangeText={handlePhoneChange}
-                            />
-                            {!isPhoneValid && <Text style={styles.errorText}>Please enter a valid 10-digit phone number.</Text>}
-                    </View>
+          <View>
+            <TextInput
+              placeholder="Phone Number"
+              keyboardType="phone-pad"
+              style={[styles.input, !isPhoneValid && styles.inputError]}
+              value={phone}
+              onChangeText={handlePhoneChange}
+            />
+            {!isPhoneValid && <Text style={styles.errorText}>Please enter a valid 10-digit phone number.</Text>}
+          </View>
         )}
-        {/* {isEmail && (
-          <TextInput
-            placeholder="Email"
-            keyboardType="email-address"
-            style={styles.input}
-            value={email}
-            onChangeText={setEmail}
-          />
-        )} */}
-         {isEmail && (
-        <View>
-          <TextInput
-            placeholder="Email"
-            keyboardType="email-address"
-            style={[styles.input, !isEmailValid && styles.inputError]}
-            value={email}
-            onChangeText={handleEmailChange}
-          />
-          {!isEmailValid && <Text style={styles.errorText}>Please enter a valid email address.</Text>}
-        </View>
-      )}
+        {isEmail && (
+          <View>
+            <TextInput
+              placeholder="Email"
+              keyboardType="email-address"
+              style={[styles.input, !isEmailValid && styles.inputError]}
+              value={email}
+              onChangeText={handleEmailChange}
+            />
+            {!isEmailValid && <Text style={styles.errorText}>Please enter a valid email address.</Text>}
+          </View>
+        )}
         <TextInput
           placeholder="Password"
           secureTextEntry
@@ -254,7 +254,8 @@ const styles = StyleSheet.create({
     padding: 12,
     marginBottom: 12,
     backgroundColor: "#f9f9f9",
-  }, inputError: {
+  },
+  inputError: {
     borderColor: 'red',
     borderWidth: 1,
   },

@@ -67,7 +67,7 @@ const Dashboard = ({ route }: { route: any }) => {
             <Avatar
               size="large"
               rounded
-              source={selectedAvatar ? { uri: selectedAvatar } : require('E:\\InventPrime\\ReactNative\\AvatarApp\\assets\\male1.jpg')}
+              source={selectedAvatar ? { uri: selectedAvatar } : require('E:\\InventPrime\\ai-friend\\assets\\male1.jpg')}
               overlayContainerStyle={styles.avatar}
             />
             <Text style={styles.aiText}>{avatarName || 'Your AI Companion'}</Text>
