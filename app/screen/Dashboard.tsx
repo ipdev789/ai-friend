@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, KeyboardAvoidingView, Platform, Modal, Animated, Dimensions, Alert } from 'react-native';
 import { Avatar } from 'react-native-elements';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router'; // Use useRouter from expo-router
@@ -20,6 +20,8 @@ const Dashboard = ({ route }: { route: any }) => {
   const [isRecording, setIsRecording] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
   const textInputRef = useRef<TextInput>(null);
+  const [isSettingsVisible, setIsSettingsVisible] = useState(false);
+  const slideAnim = useRef(new Animated.Value(Dimensions.get('window').width)).current;
 
   useEffect(() => {
     scrollViewRef.current?.scrollToEnd({ animated: true });
@@ -53,19 +55,54 @@ const Dashboard = ({ route }: { route: any }) => {
   };
 
   const handleSettings = () => {
-    router.push('/screen/settings'); // Redirect to settings page
+    setIsSettingsVisible(true);
+    Animated.timing(slideAnim, {
+      toValue: Dimensions.get('window').width / 2,
+      duration: 300,
+      useNativeDriver: false,
+    }).start();
   };
 
-  const handleNavigation = () => {
-    router.push('/screen/settings'); // Replace with your desired navigation route
+  const closeSettings = () => {
+    Animated.timing(slideAnim, {
+      toValue: Dimensions.get('window').width,
+      duration: 300,
+      useNativeDriver: false,
+    }).start(() => setIsSettingsVisible(false));
   };
 
+  const handleDeleteChatHistory = () => {
+    // Add logic to delete chat history
+    Alert.alert('Chat History Deleted', 'Your chat history has been successfully deleted.');
+  };
+
+  const handleManageLinkedAccounts = () => {
+    // Add logic to manage linked accounts
+    Alert.alert('Manage Linked Accounts', 'Here you can manage your linked accounts.');
+  };
+
+  const handleChangePassword = () => {
+    // Add logic to change password
+    Alert.alert('Change Password', 'Here you can change your password.');
+  };
+
+  // Handle delete account
+    const handleDeleteAccount = () => {
+      Alert.alert('Delete Account', 'Are you sure you want to delete your account?', [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'OK', onPress: () => Alert.alert('Account Deleted', 'Your account has been successfully deleted.') },
+      ]);
+      // Add logic to delete account, e.g., API call
+    };
+  const handleAvatarCreation = () => {
+    router.push('/screen/avatarCreation');
+  };
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <View style={styles.card}>
         <View style={styles.cardHeader}>
           <Text style={styles.cardTitle}>AI Companion Dashboard</Text>
-          <TouchableOpacity onPress={handleNavigation} style={styles.navigationButton}>
+          <TouchableOpacity onPress={handleSettings} style={styles.navigationButton}>
             <Ionicons name="settings" size={25} color="#540681" />
           </TouchableOpacity>
         </View>
@@ -74,7 +111,7 @@ const Dashboard = ({ route }: { route: any }) => {
             <Avatar
               size="large"
               rounded
-              source={selectedAvatar ? { uri: selectedAvatar } : require('E:\\InventPrime\\ai-friend\\AI-Friend_with_Expo\\assets\\male1.jpg')}
+              source={selectedAvatar ? { uri: selectedAvatar } : require('E:\\InventPrime\\ai-friend\\assets\\male1.jpg')}
               overlayContainerStyle={styles.avatar}
             />
             <Text style={styles.aiText}>{avatarName || 'Your AI Companion'}</Text>
@@ -128,6 +165,39 @@ const Dashboard = ({ route }: { route: any }) => {
       <TouchableOpacity onPress={handleSettings} style={styles.settingsButton}>
         <Ionicons name="settings" size={30} color="white" />
       </TouchableOpacity>
+
+      {/* Settings Modal */}
+      <Modal
+        transparent={true}
+        visible={isSettingsVisible}
+        animationType="none"
+        onRequestClose={closeSettings}
+      >
+        <TouchableOpacity style={styles.modalOverlay} onPress={closeSettings}>
+          <Animated.View style={[styles.settingsContainer, { left: slideAnim }]}>
+            <Text style={styles.settingsTitle}>Settings</Text>
+            <TouchableOpacity onPress={handleDeleteChatHistory} style={styles.option}>
+              <Text style={styles.optionText}>Delete Chat History</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={handleManageLinkedAccounts} style={styles.option}>
+              <Text style={styles.optionText}>Manage Linked Accounts</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={handleChangePassword} style={styles.option}>
+              <Text style={styles.optionText}>Change Password</Text>
+            </TouchableOpacity>
+             <TouchableOpacity style={styles.option} onPress={handleAvatarCreation}>
+                      <Text style={styles.optionText}>Go to Avatar Creation</Text>
+                    </TouchableOpacity>
+            
+            <TouchableOpacity onPress={handleDeleteAccount} style={[styles.option, styles.deleteOption]}>
+              <Text style={[styles.optionText, styles.deleteOptionText]}>Delete Account</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={closeSettings} style={styles.closeButton}>
+              <Ionicons name="close" size={30} color="#540681" />
+            </TouchableOpacity>
+          </Animated.View>
+        </TouchableOpacity>
+      </Modal>
     </KeyboardAvoidingView>
   );
 };
@@ -159,7 +229,7 @@ const styles = StyleSheet.create({
   },
   navigationButton: {
     padding: 10,
-    marginRight:6
+    marginRight: 6,
   },
   cardContent: {
     flex: 1,
@@ -264,6 +334,46 @@ const styles = StyleSheet.create({
   settingsButton: {
     position: 'absolute',
     top: 40,
+    right: 20,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  settingsContainer: {
+    width: '50%',
+    height: '100%',
+    backgroundColor: '#fff',
+    padding: 20,
+    position: 'absolute',
+    top: 0,
+  },
+  settingsTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#540681',
+    marginBottom: 20,
+  },
+  option: {
+    padding: 15,
+    backgroundColor: '#f8f8f8',
+    marginBottom: 10,
+    borderRadius: 10,
+  },
+  optionText: {
+    fontSize: 16,
+    color: '#540681',
+  },
+  deleteOption: {
+    backgroundColor: '#ffcccc',
+  },
+  deleteOptionText: {
+    color: '#d32f2f',
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 20,
     right: 20,
   },
 });
